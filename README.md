@@ -44,12 +44,12 @@ context.driver = webdriver.Chrome(chromedriver, options=options)
 ```
 def before_all(context):
 
-    context.CATI = TestInput()                                      
-    context.CATI.sysHIEvt = HumanInput(mock_enable=True)            
-    context.CATI.sysIntEvt = SystemInternalEvent(mock_enable=True)  
-    context.CATI.sysExtEvt = SystemExternalEvent(mock_enable=True)  
-    context.CAER = ExpectedResult()                                 
-    context.CAAR = ActualResult(mock_enable=True)                   
+    context.TI = TestInput()                                      
+    context.TI.sysHIEvt = HumanInput(mock_enable=True)            
+    context.TI.sysIntEvt = SystemInternalEvent(mock_enable=True)  
+    context.TI.sysExtEvt = SystemExternalEvent(mock_enable=True)  
+    context.ER = ExpectedResult()                                 
+    context.AR = ActualResult(mock_enable=True)                   
 ```
 此时可以调用各个实例的mock_value方法设置对应键值，无需与真实测试对象联调。
 
