@@ -1,0 +1,7 @@
+*.md
+*.log
+htmlcov/
+*__pycache__*
+*.pyc*
+logs/
+coverage/

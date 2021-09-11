@@ -1,0 +1,22 @@
+stages:
+  - build
+  - integration_test
+
+build:
+  stage: build
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME-${CI_COMMIT_SHA:0:8} .
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME-${CI_COMMIT_SHA:0:8}
+  tags:
+    - backend
+
+conduct_test_on_test_branch:
+  stage: integration_test
+  script:
+    - docker run -e HOST_PORT=443 -e XUNFEI_API_KEY=682dae00cd294c058f77b024c7c42d5d -e BAIDU_SECRET_KEY=8XcykRm4NcyIDIDTboOi06D8jY1ci1nr -e GATEWAY_TEST=False -e XUNFEI_APPID=5a1f6381 -e TOKEN_URL=https://staging-auth.iflyos.cn -e BAIDU_APP_ID=10806843 -e HOST_URL=staging-ivs.iflyos.cn -e BAIDU_API_KEY=0Fkof84e2GRZBeTj5ChGKudC -e PHONE_NUMBER=13252089063 -e CAPTCHAR=123456 -e DEVICE_ID=wwwwww123 -e AUDIO_FORMAT=AUDIO_L16_RATE_16000_CHANNELS_1 -e PASSWORD=bhunjimko789 -e PLATFORM_ACCOUNT=13252089063 -e OPEN_IFLYOS_URL=https://beta-open.iflyos.cn -e CLIENT_ID=5a0ef624-80bb-4c9d-87ec-5a1e140029a5 -e CLIENT_SECRET=fdf25cd9-96be-4620-8b01-c0dd8fe30c17 -e API_VERSION=v20180810 $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME-${CI_COMMIT_SHA:0:8} --no-logcapture --no-capture -k -t TypicalCase -t ~wip -t ~disable -t ~ExtraCase
+  only:
+    - master
+  when: manual
+  tags:
+    - backend
