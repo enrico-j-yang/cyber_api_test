@@ -15,6 +15,9 @@ except ImportError:
     import queue
 
 from common.communication_channel import CommunicationChannel
+from framework.mic import Audio
+from framework.player import Player
+from sdk.communications_library import iFlyOS
 
 
 class IFlyOSClient(CommunicationChannel):
@@ -32,7 +35,7 @@ class IFlyOSClient(CommunicationChannel):
     _event_channel_binary_queue = None
     _json_body_queue = None
     # _time_out_threshold = 500
-    _time_out_threshold = 5
+    _time_out_threshold = 10
     _resp_code = None
     _down_channel_directives = []
     _down_channel_directive = None
@@ -53,6 +56,16 @@ class IFlyOSClient(CommunicationChannel):
         else:
             logging.debug('AlexaClient')
 
+        # 创建录音设备（平台相关）
+        self.audio = Audio()
+
+        # 创建播放器（平台相关）
+        self.player = Player()
+
+        if self.player:
+            self.iflyos = iFlyOS(self.player)
+        else:
+            logging.error("创建播放器失败")
 
         self.down_channel_result_queue = self.iflyos.down_channel_result_queue
         self.event_channel_result_queue = self.iflyos.event_channel_result_queue
@@ -160,14 +173,17 @@ class IFlyOSClient(CommunicationChannel):
 
     def get_result_from_down_channel_queue(self):
         self.iflyos.down_channel_event.wait(timeout=self._time_out_threshold)
+        self.iflyos.down_channel_event.clear()
         if not self.down_channel_result_queue.empty():
             self._down_channel_directives, self._down_channel_binary = self.down_channel_result_queue.get(timeout=self._time_out_threshold)
             logging.debug("down_channel_result_queue len:" + str(self.down_channel_result_queue._qsize()))
+            logging.debug("###directives###:" + str(self._down_channel_directives))
 
             if self._down_channel_directives:
                 for directive in self._down_channel_directives:
+                    logging.debug("@@@put directive into queue:" + str(directive))
                     self._down_channel_directive_queue.put(directive)
-                    logging.debug("_down_channel_directive_queue len:" + str(self._down_channel_directive_queue._qsize()))
+                logging.debug("_down_channel_directive_queue len:" + str(self._down_channel_directive_queue._qsize()))
 
             if self._down_channel_binary:
                 self._down_channel_binary_queue.put(self._down_channel_binary)
@@ -175,6 +191,7 @@ class IFlyOSClient(CommunicationChannel):
 
     def get_directive_from_down_channel_list(self):
         self._down_channel_directive = self._down_channel_directive_queue.get(timeout=self._time_out_threshold)
+        logging.debug("@@@get directive from queue:" + str(self._down_channel_directive))
         logging.debug("_down_channel_directive_queue len:" + str(self._down_channel_directive_queue._qsize()))
 
     def get_binary_from_down_channel_list(self):
